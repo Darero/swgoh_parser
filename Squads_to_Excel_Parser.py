@@ -1,5 +1,5 @@
 from openpyxl import Workbook
-from swgoh_parser.api_swgoh_help import api_swgoh_help, Settings
+from api_swgoh_help import api_swgoh_help, Settings
 from openpyxl.styles import Alignment, Border, Side
 
 # api_swgoh_help by MarTrepodi https://github.com/MarTrepodi/api_swgoh_help #
@@ -90,7 +90,7 @@ class GuildSquadsData(SwgohData):
         for col, value in dims.items():
             sheet.column_dimensions[col].width = value
 
-    def write_to_sheet(self, needed_nicknames=None):  # lend units_list you want to get information about
+    def write_to_sheet(self, needed_nicknames=None, seven=None):  # lend units_list you want to get information about
         print('Начинаю запись в файл')
         self.sheet.cell(1, 1).value = 'Name'
         for i in range(len(self.units_list)):
@@ -100,22 +100,27 @@ class GuildSquadsData(SwgohData):
         self.sheet.cell(1, len(self.units_list) + 4).value = 'Проверка'  # базовая разметка
         _working_dict = {nickname: self.guild_units[nickname] for nickname in self.guild_units if
                          (needed_nicknames is None or nickname in needed_nicknames)}
-        print(len(_working_dict))
+        # print(_working_dict)
         for indx, nickname in enumerate(_working_dict):
             # indx used to choose right row, nickname for further searching and writting nickname in Name column
             self.sheet.cell(2 + indx, 1).value = nickname
             for hero in _working_dict[nickname]:  # getting heroes list for every ally
                 hero_name = list(hero.keys())[0]
                 if hero_name in self.units_list:  # search if your ally HAS particular unit
-                    column = self.find_column(hero_name)
-                    self.sheet.cell(2 + indx, column).value = self.get_needed_data(
-                        _working_dict[nickname][_working_dict[nickname].index(hero)][hero_name][0])
+                    if seven is None:
+                        column = self.find_column(hero_name)
+                        self.sheet.cell(2 + indx, column).value = self.get_needed_data(
+                            _working_dict[nickname][_working_dict[nickname].index(hero)][hero_name][0])
+                    elif seven is not None and hero[hero_name][0]['starLevel'] != 7:
+                        column = self.find_column(hero_name)
+                        self.sheet.cell(2 + indx, column).value = self.get_needed_data(
+                            _working_dict[nickname][_working_dict[nickname].index(hero)][hero_name][0])
         for i in range(len(self.units_list)):
             self.sheet.cell(1, i + 2).value = self.units_list[list(self.units_list.keys())[i]]
         self.make_styles(self.sheet)
         # for i in guild_units:
         #     sheet.cell()
-        self.wb.save(f'/Users/{input("Введите имя пользователя в Windows: ")}/Desktop/SWGOH_SQUAD_HAN.xlsx')
+        self.wb.save(f'/Users/{input("Введите имя пользователя в Windows: ")}/Desktop/SWGOH_SQUAD_KENOBI.xlsx')
         print('Готово! Проверьте ваш рабочий стол')
 
     def write_data_by_nicknames(self):
@@ -141,8 +146,10 @@ class SelfData(SwgohData):
                 print(i)
 
 
-a = SelfData()
-a.get_mods_on_hero()
+a = GuildSquadsData({'GENERALKENOBI': 'Кеноби'})
+a.write_to_sheet(seven=True)
+# a = SelfData()
+# a.get_mods_on_hero()
 # write_to_sheet(units_list_GEO)
 # print(a)
 # fetch_guild_units(a)
